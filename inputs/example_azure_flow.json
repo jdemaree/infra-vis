@@ -1,0 +1,64 @@
+{
+  "process_name": "Azure Integration Flow",
+  "description": "Azure front-door to backend appservices with firewall and external partners.",
+  "nodes": [
+    { "id": "front_door", "label": "Azure Front Door", "position": [0, 2], "color": "#3498db", "shape": "rectangle" },
+    { "id": "appgw_public", "label": "AppGw Public", "position": [3, 2], "color": "#3498db", "shape": "rectangle" },
+    { "id": "apim", "label": "APIM", "position": [6, 2], "color": "#3498db", "shape": "rectangle" },
+    { "id": "appgw_private", "label": "AppGw Private", "position": [7, 2], "color": "#3498db", "shape": "rectangle" },
+
+    { "id": "ams", "label": "AMS", "position": [4.5, 3.5], "color": "#3498db", "shape": "rectangle" },
+    { "id": "lms", "label": "LMS", "position": [4.5, 0.5], "color": "#3498db", "shape": "rectangle" },
+    { "id": "dms", "label": "DMS", "position": [7.5, 3.5], "color": "#3498db", "shape": "rectangle" },
+    { "id": "es", "label": "ES", "position": [7.5, 0.5], "color": "#3498db", "shape": "rectangle" },
+    { "id": "idm", "label": "IDM", "position": [6, 0.5], "color": "#3498db", "shape": "rectangle" },
+
+    { "id": "azure_fw", "label": "Azure Firewall", "position": [12, 2], "color": "#3498db", "shape": "rectangle" },
+
+    { "id": "credit_bureau", "label": "Credit Bureaus", "position": [15, 3], "color": "#3498db", "shape": "circle" },
+    { "id": "salesforce", "label": "Salesforce", "position": [15, 1], "color": "#3498db", "shape": "circle" }
+  ],
+
+  "flows": [
+    {
+      "id": "main_route",
+      "label": "Primary Route",
+      "color": "#808080",
+      "route": [
+        "front_door",
+        "appgw_public",
+        "apim",
+        "ams",
+        "appgw_private",
+        "apim",
+        "dms",
+        "azure_fw",
+        "credit_bureau",
+        "azure_fw",
+        "dms",
+        "appgw_private",
+        "apim",
+        "ams",
+        "appgw_private",
+        "apim",
+        "lms"
+      ],
+      "moving": true,
+      "speed": 1.0,
+      "pulse_rate": 1.0
+    },
+
+    { "source": "ams", "destination": "apim", "label": "AMS -> APIM", "color": "#808080", "pulse_rate": 0.8 },
+    { "source": "lms", "destination": "apim", "label": "LMS -> APIM", "color": "#808080", "pulse_rate": 0.8 },
+    { "source": "dms", "destination": "apim", "label": "DMS -> APIM", "color": "#808080", "pulse_rate": 0.8 },
+    { "source": "es", "destination": "apim", "label": "ES -> APIM", "color": "#808080", "pulse_rate": 0.8 },
+    { "source": "idm", "destination": "apim", "label": "IDM -> APIM", "color": "#808080", "pulse_rate": 0.8 },
+
+    { "source": "ams", "destination": "appgw_private", "label": "AMS -> AppGw Private", "color": "#808080", "pulse_rate": 0.6 },
+    { "source": "lms", "destination": "appgw_private", "label": "LMS -> AppGw Private", "color": "#808080", "pulse_rate": 0.6 },
+    { "source": "dms", "destination": "appgw_private", "label": "DMS -> AppGw Private", "color": "#808080", "pulse_rate": 0.6 },
+
+    { "source": "azure_fw", "destination": "credit_bureau", "label": "FW -> Credit Bureau", "color": "#808080", "pulse_rate": 0.5 },
+    { "source": "azure_fw", "destination": "salesforce", "label": "FW -> Salesforce", "color": "#808080", "pulse_rate": 0.5 }
+  ]
+}

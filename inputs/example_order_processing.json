@@ -1,0 +1,71 @@
+{
+  "process_name": "Order Processing Flow",
+  "description": "Example business process showing order flow through e-commerce infrastructure",
+  "nodes": [
+    {
+      "id": "web_app",
+      "label": "Web App",
+      "position": [0, 2],
+      "color": "#3498db",
+      "shape": "rectangle"
+    },
+    {
+      "id": "api_gateway",
+      "label": "API Gateway",
+      "position": [3, 2],
+      "color": "#3498db",
+      "shape": "rectangle"
+    },
+    {
+      "id": "order_service",
+      "label": "Order Service",
+      "position": [6, 3],
+      "color": "#2ecc71",
+      "shape": "rectangle"
+    },
+    {
+      "id": "payment_service",
+      "label": "Payment Service",
+      "position": [6, 1],
+      "color": "#e74c3c",
+      "shape": "rectangle"
+    },
+    {
+      "id": "database",
+      "label": "Database",
+      "position": [9, 2],
+      "color": "#f39c12",
+      "shape": "circle"
+    },
+    {
+      "id": "cache",
+      "label": "Cache (Redis)",
+      "position": [9, 0],
+      "color": "#95a5a6",
+      "shape": "circle"
+    }
+  ],
+  "flows": [
+    {
+      "id": "processing_loop",
+      "label": "Order Loop",
+      "color": "#e74c3c",
+      "route": [
+        "web_app",
+        "api_gateway",
+        "order_service",
+        "database",
+        "order_service",
+        "api_gateway",
+        "payment_service",
+        "cache",
+        "payment_service",
+        "api_gateway",
+        "web_app"
+      ],
+      "moving": true,
+      "speed": 1.2,
+      "pulse_rate": 1.5
+    }
+  ]
+}
