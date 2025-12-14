@@ -2,21 +2,105 @@
   "process_name": "Azure Integration Flow",
   "description": "Azure front-door to backend appservices with firewall and external partners.",
   "nodes": [
-    { "id": "front_door", "label": "Azure Front Door", "position": [0, 2], "color": "#3498db", "shape": "rectangle" },
-    { "id": "appgw_public", "label": "AppGw Public", "position": [3, 2], "color": "#3498db", "shape": "rectangle" },
-    { "id": "apim", "label": "APIM", "position": [6, 2], "color": "#3498db", "shape": "rectangle" },
-    { "id": "appgw_private", "label": "AppGw Private", "position": [7, 2], "color": "#3498db", "shape": "rectangle" },
+    {
+      "id": "front_door",
+      "label": "Azure Front Door",
+      "position": [0, 2],
+      "color": "#3498db",
+      "shape": "rectangle",
+      "description": "Global entry point that routes traffic to the closest application gateway and applies WAF rules."
+    },
+    {
+      "id": "appgw_public",
+      "label": "AppGw Public",
+      "position": [3, 2],
+      "color": "#3498db",
+      "shape": "rectangle",
+      "description": "Public-facing Application Gateway that terminates TLS and forwards requests to APIM or backend pools."
+    },
+    {
+      "id": "apim",
+      "label": "APIM",
+      "position": [6, 2],
+      "color": "#3498db",
+      "shape": "rectangle",
+      "description": "API Management layer: authentication, rate-limiting, and routing to microservices. Supports JWT and OAuth flows."
+    },
+    {
+      "id": "appgw_private",
+      "label": "AppGw Private",
+      "position": [7, 2],
+      "color": "#3498db",
+      "shape": "rectangle",
+      "description": "Internal Application Gateway for routing between internal services and the DMS/LMS clusters."
+    },
 
-    { "id": "ams", "label": "AMS", "position": [4.5, 3.5], "color": "#3498db", "shape": "rectangle" },
-    { "id": "lms", "label": "LMS", "position": [4.5, 0.5], "color": "#3498db", "shape": "rectangle" },
-    { "id": "dms", "label": "DMS", "position": [7.5, 3.5], "color": "#3498db", "shape": "rectangle" },
-    { "id": "es", "label": "ES", "position": [7.5, 0.5], "color": "#3498db", "shape": "rectangle" },
-    { "id": "idm", "label": "IDM", "position": [6, 0.5], "color": "#3498db", "shape": "rectangle" },
+    {
+      "id": "ams",
+      "label": "AMS",
+      "position": [4.5, 3.5],
+      "color": "#3498db",
+      "shape": "rectangle",
+      "description": "Account Management Service: validates user accounts, handles profile updates, and triggers downstream events."
+    },
+    {
+      "id": "lms",
+      "label": "LMS",
+      "position": [4.5, 0.5],
+      "color": "#3498db",
+      "shape": "rectangle",
+      "description": "Lawful Matching Service: performs rules-based checks and finalizes transaction decisions before persistence."
+    },
+    {
+      "id": "dms",
+      "label": "DMS",
+      "position": [7.5, 3.5],
+      "color": "#3498db",
+      "shape": "rectangle",
+      "description": "Data Management Service: writes transactions to the canonical store and publishes events." 
+    },
+    {
+      "id": "es",
+      "label": "ES",
+      "position": [7.5, 0.5],
+      "color": "#3498db",
+      "shape": "rectangle",
+      "description": "Event Service that ingests event streams for analytics and audit trails." 
+    },
+    {
+      "id": "idm",
+      "label": "IDM",
+      "position": [6, 0.5],
+      "color": "#3498db",
+      "shape": "rectangle",
+      "description": "Identity Manager: performs user authn/authz lookups and returns tokens to APIM." 
+    },
 
-    { "id": "azure_fw", "label": "Azure Firewall", "position": [12, 2], "color": "#3498db", "shape": "rectangle" },
+    {
+      "id": "azure_fw",
+      "label": "Azure Firewall",
+      "position": [12, 2],
+      "color": "#3498db",
+      "shape": "rectangle",
+      "description": "Network egress control point; handles NAT, logging, and outbound rules to external partners."
+    },
 
-    { "id": "credit_bureau", "label": "Credit Bureaus", "position": [15, 3], "color": "#3498db", "shape": "circle" },
-    { "id": "salesforce", "label": "Salesforce", "position": [15, 1], "color": "#3498db", "shape": "circle" }
+    {
+      "id": "credit_bureau",
+      "label": "Credit Bureaus",
+      "position": [15, 3],
+      "color": "#3498db",
+      "shape": "circle",
+      "description": "External partner that performs credit checks and returns scored results (synchronous API call)."
+    },
+    {
+      "id": "salesforce",
+      "label": "Salesforce",
+      "position": [15, 1],
+      "color": "#3498db",
+      "shape": "circle",
+      "description": "CRM integration used for sending customer data updates (async webhook)."
+    }
   ],
 
   "flows": [
@@ -25,23 +109,23 @@
       "label": "Primary Route",
       "color": "#808080",
       "route": [
-        "front_door",
-        "appgw_public",
-        "apim",
-        "ams",
-        "appgw_private",
-        "apim",
-        "dms",
-        "azure_fw",
-        "credit_bureau",
-        "azure_fw",
-        "dms",
-        "appgw_private",
-        "apim",
-        "ams",
-        "appgw_private",
-        "apim",
-        "lms"
+        { "id": "front_door", "description": "Front Door terminates TLS and applies WAF filtering before routing." },
+        { "id": "appgw_public", "description": "Public AppGw handles TLS offload and forwards to APIM or backend pools." },
+        { "id": "apim", "description": "API Management performs authn/authz and applies rate limits." },
+        { "id": "ams", "description": "AMS validates account details and enriches request context." },
+        { "id": "appgw_private", "description": "Internal routing via private AppGw to reach internal services." },
+        { "id": "apim", "description": "APIM again enforces policies for internal service calls." },
+        { "id": "dms", "description": "DMS writes canonical transaction records to the store." },
+        { "id": "azure_fw", "description": "Azure Firewall handles egress control and logs outbound requests." },
+        { "id": "credit_bureau", "description": "External credit bureau call for scoring; synchronous response expected." },
+        { "id": "azure_fw", "description": "Return path through firewall with logging and retries if needed." },
+        { "id": "dms", "description": "DMS receives enriched response and stores result." },
+        { "id": "appgw_private", "description": "Internal gateway routes result back toward APIM." },
+        { "id": "apim", "description": "APIM applies response transforms and returns to the caller." },
+        { "id": "ams", "description": "AMS triggers any downstream account update events." },
+        { "id": "appgw_private", "description": "Internal routing for final handoff to LMS." },
+        { "id": "apim", "description": "Final API-level acknowledgements and metrics emission." },
+        { "id": "lms", "description": "LMS finalizes the transaction and persists final state." }
       ],
       "moving": true,
       "speed": 1.0,

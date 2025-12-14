@@ -1,22 +1,44 @@
-I want to create a Python script that will create an MP4 file that shows the flow of traffic through infrastructure to help staff understand the flow of data through the network for various business processes.  
+## infra-vis
 
-I am learning (relearning) python and some new modules, while also learning github Agent.   THis is a fresh computer, fresh VSCode, fresh Python install, Fresh Git install, Fresh git hub repo... 
+This repository generates simple infrastructure flow visualizations and MP4 animations from JSON process definitions.
 
-Lets see what it can do.  I got some leads from ChatGPT on a python way to do this.. I will share it here. 
+What this does
+- Provide a data-driven way to describe nodes and flows in JSON (`inputs/*.json`).
+- Render static previews (HTML + PNG) and animated MP4s using Plotly (frames) + OpenCV (encoding).
 
+Quick start
 
+1. Create a Python 3.12 virtual environment and activate it:
 
-Manim Community Edition producing an MP4 or GIF that you embed in Azure DevOps Wiki or SharePoint. 
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
 
-Here are the requirements, end to end.
+2. Run the visualizer with an input JSON (example provided):
 
-Software you need on the machine that renders the animation
-    Python  (installed using Microsoft Store)
-    Manim Community | Documentation  (installed using pip)
-    FFmpeg (installed using github agent)
-        Also Installed:
-            choco
-            git
-    ManimPango (installed using GitHub Agent, on this install the Agent recommended a .venv which I accepted.)
-    LaTeX (Optional)
+```powershell
+.venv\Scripts\python.exe scripts\animate_flow_opencv.py inputs/example_azure_flow.json
+```
+
+Outputs
+- Files are written to the `media/` folder:
+    - `*.html` — interactive Plotly preview
+    - `*.png` — static snapshot
+    - `*.mp4` — encoded animation (per-frame rendering + OpenCV)
+
+Notes & tips
+- The script auto-calculates animation length based on the route length (number of segments). You can adjust `speed` on a `route` flow to make the moving marker faster or slower.
+- Lines are rendered as muted dotted gray by default; node colors and flow colors are taken from the JSON but can be overridden.
+- Frame rendering is parallelized (ThreadPoolExecutor) — you can tune `max_workers` in `create_animated_mp4` to match your CPU.
+- If OpenCV (`cv2`) or Plotly image export (`kaleido`) are not installed, only HTML will be produced.
+
+Files to look at
+- `scripts/animate_flow_opencv.py` — main visualizer (renders static + animated outputs).
+- `inputs/` — example JSON inputs and schema.
+- `media/` — generated outputs (HTML/PNG/MP4).
+
+If you'd like, I can add a short CLI wrapper, or export GIFs instead of MP4s.
 

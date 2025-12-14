@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Dict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import numpy as np
+import textwrap
 
 import plotly.graph_objects as go
 
@@ -250,9 +251,19 @@ class InfrastructureFlowVisualizer:
         route_positions = []
         seg_lengths = []
         total_route_length = 0.0
+        route_entries = []
         if route_flow:
-            # Map route node ids to positions
-            for nid in route_flow.get("route", []):
+            # Support route entries as either simple node-id strings or
+            # objects {"id": "node_id", "description": "..."}
+            raw_route = route_flow.get("route", [])
+            for item in raw_route:
+                if isinstance(item, dict):
+                    nid = item.get("id")
+                    route_entries.append(item)
+                else:
+                    nid = item
+                    route_entries.append({"id": nid})
+
                 node_obj = next((n for n in self.nodes if n["id"] == nid), None)
                 if node_obj:
                     route_positions.append(tuple(node_obj.get("position", [0, 0])))
@@ -309,6 +320,79 @@ class InfrastructureFlowVisualizer:
                 showlegend=False,
             )
             fig.add_traces([moving_trace])
+
+            # Determine the current stage/node to display in the context box
+            # based on the route progress (segment index + local t) so the
+            # description exactly follows the dot along the route.
+            stage_node_obj = None
+            try:
+                # seg_idx and local_t were computed above when locating the marker
+                # Choose the node index: if the marker is in the first half of the
+                # segment, show the start node; otherwise show the end node.
+                node_index = seg_idx if local_t < 0.5 else seg_idx + 1
+                # Clamp index into valid range
+                node_index = max(0, min(node_index, len(route_entries) - 1))
+                route_entry = route_entries[node_index]
+                node_id_for_stage = route_entry.get("id")
+                stage_node_obj = next((n for n in self.nodes if n["id"] == node_id_for_stage), None)
+            except Exception:
+                stage_node_obj = None
+
+            # Prepare context text (prefer `description` on the stage node)
+            if stage_node_obj:
+                stage_title = stage_node_obj.get("label", stage_node_obj.get("id", "Stage"))
+                # Prefer per-route-step description when provided
+                stage_desc = route_entry.get("description") if route_entry.get("description") else stage_node_obj.get("description", stage_node_obj.get("note", ""))
+                if not stage_desc:
+                    stage_desc = route_flow.get("label", "")
+            else:
+                stage_title = self.process_name
+                stage_desc = ""
+
+            # Prepare wrapped plain-text description (no HTML) and limit length
+            raw_desc = str(stage_desc or "")
+            # Truncate very long descriptions to avoid overflowing the box
+            max_chars = 800
+            if len(raw_desc) > max_chars:
+                raw_desc = raw_desc[: max_chars - 3] + "..."
+
+            wrapped = textwrap.fill(raw_desc, width=40)
+            desc_text = f"{stage_title}\n{wrapped}" if wrapped else stage_title
+
+            # Add a static context box in the top-left (paper coordinates)
+            box_x0 = 0.02
+            box_x1 = 0.28
+            box_y1 = 0.98
+            box_y0 = 0.70
+
+            fig.update_layout(shapes=[
+                dict(
+                    type="rect",
+                    xref="paper",
+                    yref="paper",
+                    x0=box_x0,
+                    y0=box_y0,
+                    x1=box_x1,
+                    y1=box_y1,
+                    line=dict(color="#444", width=1),
+                    fillcolor="rgba(255,255,255,0.95)",
+                    layer="above",
+                )
+            ])
+
+            fig.add_annotation(
+                text=desc_text,
+                xref="paper",
+                yref="paper",
+                x=(box_x0 + 0.02),
+                y=(box_y1 - 0.02),
+                showarrow=False,
+                align="left",
+                xanchor="left",
+                yanchor="top",
+                font=dict(size=12, color="#111"),
+                borderpad=4,
+            )
 
         fig.update_layout(
             title=self.process_name,
